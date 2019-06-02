@@ -12,6 +12,15 @@ function [x_hist, u_hist, time_hist] = mppi(func_is_task_complete,
 
   % initialize prereqs for algorithm
   % TODO check inputs for correct dimensionality and value ranges
+  % TODO SGF
+  % TODO alpha
+  % TODO comments lol
+  % TODO provide compute parameterized compute weights function?
+  % TODO running cost does not have control should it? I mean we are
+  % generating state trajectories not control trajectories but like the
+  % control allows for that state trajectory to happen. Like if we have a
+  % cheap state trajectory at the cost of a high control then should we
+  % still forget about it in the trajectory cost.
 
   % Time stuff
   num_timesteps = size(init_ctrl_seq)(2);
@@ -43,8 +52,6 @@ function [x_hist, u_hist, time_hist] = mppi(func_is_task_complete,
   figure(1)
   hold on
 
-  % Need to modularize/rewrite
-  
   total_timestep_num = 1;
   while(~func_is_task_complete(xo, time))
 
@@ -56,57 +63,38 @@ function [x_hist, u_hist, time_hist] = mppi(func_is_task_complete,
 
       traj_cost = zeros(1, num_samples);
       traj_cost += repmat(func_run_cost(xo), [1, num_samples]);
-    
-      % Step 1: Sample noise for the controls
+
       flat_distribution = randn(control_dim, num_samples * num_timesteps);
       ctrl_noise_flat = ctrl_noise_covar * flat_distribution;
       ctrl_noise = reshape(ctrl_noise_flat, [control_dim, num_samples, num_timesteps]);
-     
-      % Step 2: Sample the trajectories
+
       %v_traj = repmat(reshape(u_traj, [control_dim, 1, num_timesteps]), [1, num_samples, 1]) + ctrl_noise;
       for timestep_num = 1:num_timesteps
-        % Prop trajectory
         v_traj = u_traj(:,timestep_num) + ctrl_noise(:,:,timestep_num);
-        
+
         % TODO (maybe faster) According to algorithm we dont even need to save the x_traj trajectories across timesteps
         x_traj(:,:,timestep_num+1) = func_F(x_traj(:,:,timestep_num),func_g(v_traj),dt);
         %x_traj(:,:,timestep_num+1) = func_F(x_traj(:,:,timestep_num),func_g(v_traj(:,:,timestep_num)),dt);
         %x_sample_values(:,:) = func_F(x_sample_values(:,:),func_g(v),dt);
-        
-        % Calculate cost for the trajectory
+
         traj_cost += func_run_cost(x_traj(:,:,timestep_num+1)) + learning_rate * (u_traj(:,timestep_num)' * (inverse(ctrl_noise_covar) * v_traj));
         %traj_cost += func_run_cost(x_traj(:,:,timestep_num+1)) + learning_rate * (u_traj(:,timestep_num)' * (inverse(ctrl_noise_covar) * v_traj(:,:,timestep_num)));
         %traj_cost += func_run_cost(x_sample_values(:,:)) + learning_rate * (u_traj(:,timestep_num)' * (inverse(ctrl_noise_covar) * v));
-                   
+
         fprintf("TN: %d, IN: %d, DU: %d, Simtime: %d\n", timestep_num, iteration, mean(sum(abs(du),1)), time);
       end
       % TODO investiage the speedup here
       %traj_cost = func_run_cost(x_traj(:,:,timestep_num+1)) + learning_rate * (u_traj(:,timestep_num)' * (inverse(ctrl_noise_covar) * v_traj(:,:,timestep_num)));
       traj_cost += func_term_cost(x_traj(:,:,timestep_num+1));
       %traj_cost += func_term_cost(x_sample_values(:,:));
-      % TODO I think for the last step both the running cost and the terminal cost should be added. Not sure tho
-      % Hint: Check the algorihm lol
-      % TODO SGF
-      % TODO alpha
-      % TODO comments lol
-      % TODO provide compute parameterized compute weights function?
-      % TODO running cost does not have control should it? I mean we are
-      % generating state trajectories not control trajectories but like the
-      % control allows for that state trajectory to happen. Like if we have a
-      % cheap state trajectory at the cost of a high control then should we
-      % still forget about it in the trajectory cost.
+
 
       w = func_comp_weights(traj_cost);
-      %wr = repmat(w, [control_dim, 1, num_timesteps])
-      
       du = reshape(sum(repmat(w, [control_dim, 1, num_timesteps]) .* ctrl_noise,2), [control_dim, num_timesteps]);
-      %du = w * ctrl_noise;
-      
-      % END Need to modularize/rewrite
-      
+
       u_traj = u_traj + du;
       iteration = iteration + 1;
-      
+
     end
 
     u_traj(1:end-1) = u_traj(2:end);
@@ -120,17 +108,17 @@ function [x_hist, u_hist, time_hist] = mppi(func_is_task_complete,
 
     % Real time plotting
     xlim([0,time_hist(end)])
-    state_colors = ['r', 'b'];
-    ctrl_colors = ['k', 'c'];
+    state_colors = ['b', 'r', 'm', 'c'];
+    ctrl_colors = ['k', 'g', 'y', 'w'];
     for sd = 1:state_dim
       plot(time_hist(total_timestep_num:total_timestep_num+1),
-          x_hist(sd,total_timestep_num:total_timestep_num+1)',state_colors(sd))
+          x_hist(sd,total_timestep_num:total_timestep_num+1)',state_colors(mod(sd - 1,size(state_colors,2)) + 1))
     end
-        
+
     if (total_timestep_num > 1)
       for cd = 1:control_dim
         plot(time_hist(total_timestep_num-1:total_timestep_num),
-            u_hist(cd,total_timestep_num-1:total_timestep_num)',ctrl_colors(cd))
+            u_hist(cd,total_timestep_num-1:total_timestep_num)',ctrl_colors(mod(cd - 1,size(ctrl_colors,2)) + 1))
       end
     end
     drawnow

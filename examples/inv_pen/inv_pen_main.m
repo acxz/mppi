@@ -9,31 +9,19 @@ disp("starting sampling based MPC")
 num_samples = 5e3;
 time_horizon = 1; % in seconds
 num_timesteps = 10;
-ctrl_dim = 2;
+ctrl_dim = 1;
 init_ctrl_seq = randn(ctrl_dim, num_timesteps);
 init_state = [0; 0];
-ctrl_noise_covar = [5e-1, 0; 0, 5e-4]; % ctrl_dim by ctrl_dim
+ctrl_noise_covar = [5e-1]; % ctrl_dim by ctrl_dim
 learning_rate = 0.01;
 per_ctrl_based_ctrl_noise = 0.999; % this feature currently broken
 addpath(genpath('../..'));
 
-num_loops = 1;
-t1 = time();
-
-for loop_num = 1:num_loops
-
-  [x_hist, u_hist, time_hist] = mppi(@inv_pen_is_task_complete,
+[x_hist, u_hist, time_hist] = mppi(@inv_pen_is_task_complete,
  @inv_pen_control_update_converged, @inv_pen_comp_weights, @inv_pen_term_cost,
 @inv_pen_run_cost,@inv_pen_gen_next_ctrl, @inv_pen_state_est, @inv_pen_apply_ctrl,
  @inv_pen_g, @inv_pen_F, num_samples,learning_rate, init_state, init_ctrl_seq,
  ctrl_noise_covar, time_horizon, per_ctrl_based_ctrl_noise);
-  
-end
-t2 = time();
-total_time = (t2 - t1)/num_loops
- 
-% Og 233.61 69.840
-% vect v_traj 210.79 70.190
  
 %plot(time_hist, x_hist(1,:));
 %plot(time_hist, x_hist(2,:));
