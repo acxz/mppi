@@ -80,6 +80,8 @@ function [x_hist, u_hist, time_hist] = mppi(func_is_task_complete,
                    
         fprintf("TN: %d, IN: %d, DU: %d, Simtime: %d\n", timestep_num, iteration, mean(sum(abs(du),1)), time);
       end
+      % TODO investiage the speedup here
+      %traj_cost = func_run_cost(x_traj(:,:,timestep_num+1)) + learning_rate * (u_traj(:,timestep_num)' * (inverse(ctrl_noise_covar) * v_traj(:,:,timestep_num)));
       traj_cost += func_term_cost(x_traj(:,:,timestep_num+1));
       %traj_cost += func_term_cost(x_sample_values(:,:));
       % TODO I think for the last step both the running cost and the terminal cost should be added. Not sure tho

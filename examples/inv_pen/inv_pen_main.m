@@ -8,16 +8,16 @@ disp("starting sampling based MPC")
 % TODO: Offload variables into a config file or something
 num_samples = 5e3;
 time_horizon = 1; % in seconds
-num_timesteps = 100;
+num_timesteps = 10;
 ctrl_dim = 2;
 init_ctrl_seq = randn(ctrl_dim, num_timesteps);
 init_state = [0; 0];
 ctrl_noise_covar = [5e-1, 0; 0, 5e-4]; % ctrl_dim by ctrl_dim
 learning_rate = 0.01;
 per_ctrl_based_ctrl_noise = 0.999; % this feature currently broken
-addpath(genpath('./inv_pen'));
+addpath(genpath('../..'));
 
-num_loops = 5;
+num_loops = 1;
 t1 = time();
 
 for loop_num = 1:num_loops
@@ -32,8 +32,8 @@ end
 t2 = time();
 total_time = (t2 - t1)/num_loops
  
-% Og
-% vect v_traj
+% Og 233.61 69.840
+% vect v_traj 210.79 70.190
  
 %plot(time_hist, x_hist(1,:));
 %plot(time_hist, x_hist(2,:));
