@@ -23,19 +23,19 @@ function [x_hist, u_hist, time_hist] = mppi(func_is_task_complete,
   % still forget about it in the trajectory cost.
 
   % Time stuff
-  num_timesteps = size(init_ctrl_seq)(2);
+  num_timesteps = size(init_ctrl_seq,2);
   dt = time_horizon/num_timesteps;
   time = 0;
   time_hist = [time];
 
   % state history
-  state_dim = size(init_state)(1);
+  state_dim = size(init_state,1);
   x_hist = zeros(state_dim, 1);
   x_hist = init_state;
   xo = init_state;
 
   % control history
-  control_dim = size(init_ctrl_seq)(1);
+  control_dim = size(init_ctrl_seq,1);
   u_hist = [];
   % A big number p much
   %du = realmax * ones(control_dim, num_timesteps);
@@ -53,13 +53,13 @@ function [x_hist, u_hist, time_hist] = mppi(func_is_task_complete,
   hold on
 
   total_timestep_num = 1;
-  while(~func_is_task_complete(xo, time))
+  while(func_is_task_complete(xo, time) == false)
 
     x_traj(:,:,1) = repmat(xo,[1, num_samples]);
     %x_sample_values(:,:) = repmat(xo,[1, num_samples]);
 
     iteration = 1;
-    while(~func_control_update_converged(du, iteration))
+    while(func_control_update_converged(du, iteration) == false)
 
       traj_cost = zeros(1, num_samples);
       traj_cost += repmat(func_run_cost(xo), [1, num_samples]);
