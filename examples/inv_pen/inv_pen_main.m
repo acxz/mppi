@@ -17,8 +17,8 @@ learning_rate = 0.01;
 per_ctrl_based_ctrl_noise = 0.999;
 plot_traj = true;
 print = false;
-save_sampling = true; % This will slow the program down.
-sampling_filename = "v_hist.dat";
+save_sampling = false; % Saves 0.8 GB to disk. This will slow the program down.
+sampling_filename = "inv_pen";
 addpath(genpath('../..'));
 
 [x_hist, u_hist, time_hist] = mppi(@inv_pen_is_task_complete,

@@ -79,10 +79,6 @@ function [x_hist, u_hist, time_hist] = mppi(func_is_task_complete,
         v_traj(:,ctrl_based_ctrl_noise_samples+1:end,:) = ctrl_noise(:,ctrl_based_ctrl_noise_samples+1:end,:);
       end
       
-      if(save_sampling)
-        save("-append",sampling_filename,'v_traj');
-      end
-      
       for timestep_num = 1:num_timesteps
         %v_traj = u_traj(:,timestep_num) + ctrl_noise(:,:,timestep_num);
 
@@ -99,6 +95,13 @@ function [x_hist, u_hist, time_hist] = mppi(func_is_task_complete,
           fprintf("TN: %d, IN: %d, DU: %d, Simtime: %d\n", timestep_num, iteration, mean(sum(abs(du),1)), time);
         end
       end
+      
+      if(save_sampling)
+        save("-append", [sampling_filename '_v_traj.dat'],'v_traj');
+        save("-append", [sampling_filename '_x_traj.dat'],'x_traj');
+        save("-append", [sampling_filename '_traj_cost.dat'], 'traj_cost');
+      end
+      
       % TODO investiage the speedup here
       %traj_cost = func_run_cost(x_traj(:,:,timestep_num+1)) + learning_rate * (u_traj(:,timestep_num)' * (inverse(ctrl_noise_covar) * v_traj(:,:,timestep_num)));
       traj_cost += func_term_cost(x_traj(:,:,timestep_num+1));
