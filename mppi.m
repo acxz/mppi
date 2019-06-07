@@ -8,13 +8,14 @@ function [x_hist, u_hist, time_hist] = mppi(func_is_task_complete,
   func_control_update_converged, func_comp_weights, func_term_cost,
   func_run_cost,func_gen_next_ctrl, func_state_est, func_apply_ctrl, func_g,
   func_F, num_samples, learning_rate, init_state, init_ctrl_seq,
-  ctrl_noise_covar, time_horizon, per_ctrl_based_ctrl_noise, plot_traj, print)
+  ctrl_noise_covar, time_horizon, per_ctrl_based_ctrl_noise, plot_traj, print,
+  save_sampling, sampling_filename)
 
   % TODO check inputs for correct dimensionality and value ranges
   % TODO SGF
   % TODO comments lol
   % TODO provide compute parameterized compute weights function?
-
+  
   % Time stuff
   num_timesteps = size(init_ctrl_seq,2);
   dt = time_horizon/num_timesteps;
@@ -25,6 +26,7 @@ function [x_hist, u_hist, time_hist] = mppi(func_is_task_complete,
   state_dim = size(init_state,1);
   x_hist = zeros(state_dim, 1);
   x_hist = init_state;
+  true_x = init_state;
   xo = init_state;
 
   % control history
@@ -43,7 +45,7 @@ function [x_hist, u_hist, time_hist] = mppi(func_is_task_complete,
   
   % sampled control trajectories
   v_traj = zeros(control_dim, num_samples, num_timesteps);
-
+  
   % Plot trajectory in real time
   if(plot_traj)
     figure(1)
@@ -53,6 +55,7 @@ function [x_hist, u_hist, time_hist] = mppi(func_is_task_complete,
   total_timestep_num = 1;
   while(func_is_task_complete(xo, time) == false)
 
+    xo = func_state_est(true_x);
     x_traj(:,:,1) = repmat(xo,[1, num_samples]);
     %x_sample_values(:,:) = repmat(xo,[1, num_samples]);
 
@@ -74,6 +77,10 @@ function [x_hist, u_hist, time_hist] = mppi(func_is_task_complete,
       else
         v_traj(:,1:ctrl_based_ctrl_noise_samples,:) = repmat(reshape(u_traj, [control_dim, 1, num_timesteps]), [1, ctrl_based_ctrl_noise_samples, 1]) + ctrl_noise(:,1:ctrl_based_ctrl_noise_samples,:);
         v_traj(:,ctrl_based_ctrl_noise_samples+1:end,:) = ctrl_noise(:,ctrl_based_ctrl_noise_samples+1:end,:);
+      end
+      
+      if(save_sampling)
+        save("-append",sampling_filename,'v_traj');
       end
       
       for timestep_num = 1:num_timesteps
@@ -109,8 +116,8 @@ function [x_hist, u_hist, time_hist] = mppi(func_is_task_complete,
     u_traj(1:end-1) = u_traj(2:end);
     u_traj(end) = func_gen_next_ctrl(u_traj(end));
 
-    xo = func_apply_ctrl(x_hist(:,total_timestep_num), u_traj(:,1), dt);
-    x_hist(:,total_timestep_num+1) = xo;
+    true_x = func_apply_ctrl(x_hist(:,total_timestep_num), u_traj(:,1), dt);
+    x_hist(:,total_timestep_num+1) = true_x;
     u_hist = [u_hist u_traj(:,1)];
     time = time + dt;
     time_hist = [time_hist, time];
@@ -139,4 +146,5 @@ function [x_hist, u_hist, time_hist] = mppi(func_is_task_complete,
     total_timestep_num = total_timestep_num + 1;
 
   end
+
 end
