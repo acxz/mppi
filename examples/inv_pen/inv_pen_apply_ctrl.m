@@ -18,4 +18,4 @@ function retval = inv_pen_apply_ctrl(x, u, dt)
     
     retval = x + dx_div_dt * dt;
     
-endfunction
+end

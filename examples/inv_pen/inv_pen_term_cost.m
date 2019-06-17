@@ -8,4 +8,4 @@ function retval = inv_pen_term_cost(x)
     
     retval = 1/2 * sum((x - goal_state) .* (Qf * (x - goal_state)),1);
     
-endfunction
+end

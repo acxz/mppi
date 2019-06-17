@@ -4,11 +4,11 @@
 %   Autonomous Driving
 % Algorithm 1: Sampling Based MPC
 
-function [x_hist, u_hist, time_hist] = mppi(func_is_task_complete,
-  func_control_update_converged, func_comp_weights, func_term_cost,
-  func_run_cost,func_gen_next_ctrl, func_state_est, func_apply_ctrl, func_g,
-  func_F, num_samples, learning_rate, init_state, init_ctrl_seq,
-  ctrl_noise_covar, time_horizon, per_ctrl_based_ctrl_noise, plot_traj, print,
+function [x_hist, u_hist, time_hist] = mppi(func_is_task_complete, ...
+  func_control_update_converged, func_comp_weights, func_term_cost, ...
+  func_run_cost,func_gen_next_ctrl, func_state_est, func_apply_ctrl, func_g, ...
+  func_F, num_samples, learning_rate, init_state, init_ctrl_seq, ...
+  ctrl_noise_covar, time_horizon, per_ctrl_based_ctrl_noise, plot_traj, print, ...
   save_sampling, sampling_filename)
 
   % TODO check inputs for correct dimensionality and value ranges
@@ -83,7 +83,7 @@ function [x_hist, u_hist, time_hist] = mppi(func_is_task_complete,
         % Forward propagation
         x_traj(:,:,timestep_num+1) = func_F(x_traj(:,:,timestep_num),func_g(v_traj(:,:,timestep_num)),dt);
 
-        traj_cost += func_run_cost(x_traj(:,:,timestep_num+1)) + learning_rate * (u_traj(:,timestep_num)' * (inverse(ctrl_noise_covar) * v_traj(:,:,timestep_num)));
+        traj_cost = traj_cost + func_run_cost(x_traj(:,:,timestep_num+1)) + learning_rate * (u_traj(:,timestep_num)' * (inv(ctrl_noise_covar) * v_traj(:,:,timestep_num)));
 
         if(print)
           fprintf("TN: %d, IN: %d, DU: %d, Simtime: %d\n", timestep_num, iteration, mean(sum(abs(du),1)), time);
@@ -98,7 +98,7 @@ function [x_hist, u_hist, time_hist] = mppi(func_is_task_complete,
 
       % TODO investiage the speedup here
       %traj_cost = func_run_cost(x_traj(:,:,timestep_num+1)) + learning_rate * (u_traj(:,timestep_num)' * (inverse(ctrl_noise_covar) * v_traj(:,:,timestep_num)));
-      traj_cost += func_term_cost(x_traj(:,:,timestep_num+1));
+      traj_cost = traj_cost + func_term_cost(x_traj(:,:,timestep_num+1));
 
       % Weight and du calculation
       w = func_comp_weights(traj_cost);
@@ -125,24 +125,24 @@ function [x_hist, u_hist, time_hist] = mppi(func_is_task_complete,
       xlim([0,time_hist(end)])
       state_colors = ['b', 'r', 'm', 'c'];
       ctrl_colors = ['k', 'g', 'y', 'w'];
-      for sd = 1:state_dim
-        plot(time_hist(total_timestep_num:total_timestep_num+1),
-             x_hist(sd,total_timestep_num:total_timestep_num+1)',
-             state_colors(mod(sd - 1,size(state_colors,2)) + 1))
+      for sd = (1:state_dim)
+        plot(time_hist(total_timestep_num:total_timestep_num+1), ...
+             x_hist(sd,total_timestep_num:total_timestep_num+1)', ...
+             state_colors(mod(sd - 1,size(state_colors,2)) + 1)) ...
+      
       end
 
       if (total_timestep_num > 1)
         for cd = 1:control_dim
-          plot(time_hist(total_timestep_num-1:total_timestep_num),
-               u_hist(cd,total_timestep_num-1:total_timestep_num)',
-               ctrl_colors(mod(cd - 1,size(ctrl_colors,2)) + 1))
+          plot(time_hist(total_timestep_num-1:total_timestep_num), ...
+               u_hist(cd,total_timestep_num-1:total_timestep_num)', ...
+               ctrl_colors(mod(cd - 1,size(ctrl_colors,2)) + 1)) ...
+        
         end
       end
       drawnow
     end
 
     total_timestep_num = total_timestep_num + 1;
-
   end
-
 end

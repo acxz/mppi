@@ -8,4 +8,4 @@ function retval = inv_pen_comp_weights(traj_cost)
     w = exp(-1/lambda * (traj_cost - val));
     retval = w/sum(w);
     
-endfunction
+end

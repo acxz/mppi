@@ -21,11 +21,11 @@ save_sampling = false; % Saves 0.8 GB to disk. This will slow the program down.
 sampling_filename = "inv_pen";
 addpath(genpath('../..'));
 
-[x_hist, u_hist, time_hist] = mppi(@inv_pen_is_task_complete,
- @inv_pen_control_update_converged, @inv_pen_comp_weights, @inv_pen_term_cost,
- @inv_pen_run_cost,@inv_pen_gen_next_ctrl, @inv_pen_state_est, @inv_pen_apply_ctrl,
- @inv_pen_g, @inv_pen_F, num_samples,learning_rate, init_state, init_ctrl_seq,
- ctrl_noise_covar, time_horizon, per_ctrl_based_ctrl_noise, plot_traj, print,
+[x_hist, u_hist, time_hist] = mppi(@inv_pen_is_task_complete, ...
+ @inv_pen_control_update_converged, @inv_pen_comp_weights, @inv_pen_term_cost, ...
+ @inv_pen_run_cost,@inv_pen_gen_next_ctrl, @inv_pen_state_est, @inv_pen_apply_ctrl, ...
+ @inv_pen_g, @inv_pen_F, num_samples,learning_rate, init_state, init_ctrl_seq, ...
+ ctrl_noise_covar, time_horizon, per_ctrl_based_ctrl_noise, plot_traj, print, ...
  save_sampling, sampling_filename);
  
 %plot(time_hist, x_hist(1,:));

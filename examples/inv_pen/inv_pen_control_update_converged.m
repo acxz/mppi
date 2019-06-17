@@ -10,4 +10,4 @@ function retval = inv_pen_control_update_converged(du, iteration)
       retval = true;
     end
     
-endfunction
+end

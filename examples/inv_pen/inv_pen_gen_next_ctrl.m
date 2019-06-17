@@ -5,4 +5,4 @@ function retval = inv_pen_gen_next_ctrl(u)
     
     retval = randn(1);
     
-endfunction
+end
