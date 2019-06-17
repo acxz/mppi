@@ -117,7 +117,7 @@ function [x_hist, u_hist, time_hist] = mppi(func_is_task_complete, ...
     time_hist = [time_hist, time];
 
     % Warmstart next control trajectory using past generated control trajectory
-    u_traj(1:end-1) = u_traj(2:end);
+    u_traj(:,1:end-1) = u_traj(:,2:end);
     u_traj(end) = func_gen_next_ctrl(u_traj(end));
 
     % Real time plotting
