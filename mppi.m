@@ -7,7 +7,7 @@
 function [x_hist, u_hist, time_hist] = mppi(func_is_task_complete, ...
   func_control_update_converged, func_comp_weights, func_term_cost, ...
   func_run_cost,func_gen_next_ctrl, func_state_est, func_apply_ctrl, func_g, ...
-  func_F, num_samples, learning_rate, init_state, init_ctrl_seq, ...
+  func_F, func_state_transform, num_samples, learning_rate, init_state, init_ctrl_seq, ...
   ctrl_noise_covar, time_horizon, per_ctrl_based_ctrl_noise, plot_traj, print, ...
   save_sampling, sampling_filename)
 
@@ -53,14 +53,15 @@ function [x_hist, u_hist, time_hist] = mppi(func_is_task_complete, ...
   total_timestep_num = 1;
   while(func_is_task_complete(xo, time) == false)
 
-    % state estimation at the next timestep
-    xo = func_state_est(true_x);
-    x_traj(:,:,1) = repmat(xo,[1, num_samples]);
+    % transform of state used in dynamics vs state used in control sampling
+    sample_xo = func_state_transform(xo);
+
+    x_traj(:,:,1) = repmat(sample_xo,[1, num_samples]);
 
     iteration = 1;
     while(func_control_update_converged(du, iteration) == false)
 
-      traj_cost = repmat(func_run_cost(xo), [1, num_samples]);
+      traj_cost = repmat(func_run_cost(sample_xo), [1, num_samples]);
 
       % Noise generation
       flat_distribution = randn(control_dim, num_samples * num_timesteps);
@@ -112,6 +113,7 @@ function [x_hist, u_hist, time_hist] = mppi(func_is_task_complete, ...
     % Apply control and log data
     true_x = func_apply_ctrl(x_hist(:,total_timestep_num), u_traj(:,1), dt);
     x_hist(:,total_timestep_num+1) = true_x;
+
     u_hist = [u_hist u_traj(:,1)];
     time = time + dt;
     time_hist = [time_hist, time];
@@ -119,6 +121,9 @@ function [x_hist, u_hist, time_hist] = mppi(func_is_task_complete, ...
     % Warmstart next control trajectory using past generated control trajectory
     u_traj(:,1:end-1) = u_traj(:,2:end);
     u_traj(end) = func_gen_next_ctrl(u_traj(end));
+
+    % state estimation after applying control
+    xo = func_state_est(true_x);
 
     % Real time plotting
     if(plot_traj)
@@ -129,7 +134,7 @@ function [x_hist, u_hist, time_hist] = mppi(func_is_task_complete, ...
         plot(time_hist(total_timestep_num:total_timestep_num+1), ...
              x_hist(sd,total_timestep_num:total_timestep_num+1)', ...
              state_colors(mod(sd - 1,size(state_colors,2)) + 1)) ...
-      
+
       end
 
       if (total_timestep_num > 1)
@@ -137,7 +142,7 @@ function [x_hist, u_hist, time_hist] = mppi(func_is_task_complete, ...
           plot(time_hist(total_timestep_num-1:total_timestep_num), ...
                u_hist(cd,total_timestep_num-1:total_timestep_num)', ...
                ctrl_colors(mod(cd - 1,size(ctrl_colors,2)) + 1)) ...
-        
+
         end
       end
       drawnow
