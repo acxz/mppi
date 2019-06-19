@@ -140,7 +140,7 @@ function [x_hist, u_hist, sample_x_hist, sample_u_hist, time_hist] = mppi(func_i
 
     % Warmstart next control trajectory using past generated control trajectory
     sample_u_traj(:,1:end-1) = sample_u_traj(:,2:end);
-    sample_u_traj(end) = func_gen_next_ctrl(sample_u_traj(end));
+    sample_u_traj(:, end) = func_gen_next_ctrl(sample_u_traj(:, end));
 
     % Real time plotting
     if(plot_traj)
