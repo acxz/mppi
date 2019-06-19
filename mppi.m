@@ -9,8 +9,8 @@ function [x_hist, u_hist, sample_x_hist, sample_u_hist, time_hist] = mppi(func_i
   func_run_cost,func_gen_next_ctrl, func_state_est, func_apply_ctrl, func_g, ...
   func_F, func_state_transform, func_control_transform, func_filter_du, ...
   num_samples, learning_rate, init_state, init_ctrl_seq, ctrl_noise_covar, ...
-  time_horizon, per_ctrl_based_ctrl_noise, plot_traj, print, save_sampling, ...
-  sampling_filename)
+  time_horizon, per_ctrl_based_ctrl_noise, plot_traj, print_verbose, ...
+  print_short, save_sampling, sampling_filename)
 
   % TODO check inputs for correct dimensionality and value ranges
   % TODO SGF
@@ -91,7 +91,7 @@ function [x_hist, u_hist, sample_x_hist, sample_u_hist, time_hist] = mppi(func_i
 
         traj_cost = traj_cost + func_run_cost(x_traj(:,:,timestep_num+1)) + learning_rate * (sample_u_traj(:,timestep_num)' * (inv(ctrl_noise_covar) * v_traj(:,:,timestep_num)));
 
-        if(print)
+        if(print_verbose)
           fprintf("TN: %d, IN: %d, DU: %d, Simtime: %d\n", timestep_num, iteration, mean(sum(abs(du),1)), time);
         end
       end
@@ -115,6 +115,10 @@ function [x_hist, u_hist, sample_x_hist, sample_u_hist, time_hist] = mppi(func_i
 
       sample_u_traj = sample_u_traj + du;
       iteration = iteration + 1;
+      
+      if(print_short && (print_verbose == false))
+          fprintf("DU: %d, Simtime: %d\n", mean(sum(abs(du),1)), time);
+      end
 
     end
 
