@@ -1,7 +1,7 @@
 % Author: Akash Patel (apatel435)
-% Date: 5/29/19
+% Date: 6/6/19
 
-function is_task_complete = inv_pen_is_task_complete(x, t)
+function is_task_complete = cartpole_is_task_complete(x, t)
 
     is_task_complete = false;
     if t > 5;

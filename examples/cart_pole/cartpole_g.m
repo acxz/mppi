@@ -1,7 +1,7 @@
 % Author: Akash Patel (apatel435)
-% Date: 5/29/19
+% Date: 6/6/19
 
-function clamped_u = inv_pen_g(u)
+function clamped_u = cartpole_g(u)
 
     clamped_u = u;
 

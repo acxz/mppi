@@ -1,7 +1,7 @@
 % Author: Akash Patel (apatel435)
-% Date: 5/29/19
+% Date: 6/6/19
 
-function retval = inv_pen_comp_weights(traj_cost)
+function retval = cartpole_comp_weights(traj_cost)
 
     lambda = 0.01;
     [val, ind] = min(traj_cost);

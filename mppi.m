@@ -4,19 +4,19 @@
 %   Autonomous Driving
 % Algorithm 1: Sampling Based MPC
 
-function [x_hist, u_hist, time_hist] = mppi(func_is_task_complete, ...
+function [x_hist, u_hist, sample_x_hist, sample_u_hist, time_hist] = mppi(func_is_task_complete, ...
   func_control_update_converged, func_comp_weights, func_term_cost, ...
   func_run_cost,func_gen_next_ctrl, func_state_est, func_apply_ctrl, func_g, ...
-  func_F, func_state_transform, num_samples, learning_rate, init_state, init_ctrl_seq, ...
-  ctrl_noise_covar, time_horizon, per_ctrl_based_ctrl_noise, plot_traj, print, ...
-  save_sampling, sampling_filename)
+  func_F, func_state_transform, func_control_transform, num_samples, ...
+  learning_rate, init_state, init_ctrl_seq, ctrl_noise_covar, time_horizon, ...
+  per_ctrl_based_ctrl_noise, plot_traj, print, save_sampling, sampling_filename)
 
   % TODO check inputs for correct dimensionality and value ranges
   % TODO SGF
   % TODO provide compute parameterized compute weights function?
 
   % time stuff
-  num_timesteps = size(init_ctrl_seq,2);
+  num_timesteps = size(init_ctrl_seq, 2);
   dt = time_horizon/num_timesteps;
   time = 0;
   time_hist = [time];
@@ -25,21 +25,28 @@ function [x_hist, u_hist, time_hist] = mppi(func_is_task_complete, ...
   state_dim = size(init_state,1);
   x_hist = zeros(state_dim, 1);
   x_hist = init_state;
-  true_x = init_state;
   xo = init_state;
 
   % control history
   control_dim = size(init_ctrl_seq,1);
-  u_hist = [];
+  sample_u_hist = [];
   % A big number p much
   %du = realmax * ones(control_dim, num_timesteps);
   du = 100 * ones(control_dim, num_timesteps);
+  u_hist = [];
+
+  % sample state history
+  sample_init_state = func_state_transform(init_state);
+  sample_state_dim = size(sample_init_state,1);
+  sample_x_hist = zeros(sample_state_dim, 1);
+  sample_x_hist = sample_init_state;
+  sample_xo = sample_init_state;
 
   % state trajectories
-  x_traj = zeros(state_dim, num_samples, num_timesteps + 1);
+  x_traj = zeros(sample_state_dim, num_samples, num_timesteps + 1);
 
   % control sequence
-  u_traj = init_ctrl_seq;
+  sample_u_traj = init_ctrl_seq;
 
   % sampled control trajectories
   v_traj = zeros(control_dim, num_samples, num_timesteps);
@@ -52,9 +59,6 @@ function [x_hist, u_hist, time_hist] = mppi(func_is_task_complete, ...
 
   total_timestep_num = 1;
   while(func_is_task_complete(xo, time) == false)
-
-    % transform of state used in dynamics vs state used in control sampling
-    sample_xo = func_state_transform(xo);
 
     x_traj(:,:,1) = repmat(sample_xo,[1, num_samples]);
 
@@ -73,9 +77,9 @@ function [x_hist, u_hist, time_hist] = mppi(func_is_task_complete, ...
       if (ctrl_based_ctrl_noise_samples == 0)
         v_traj = ctrl_noise;
       elseif (ctrl_based_ctrl_noise_samples == num_samples)
-        v_traj = repmat(reshape(u_traj, [control_dim, 1, num_timesteps]), [1, num_samples, 1]) + ctrl_noise;
+        v_traj = repmat(reshape(sample_u_traj, [control_dim, 1, num_timesteps]), [1, num_samples, 1]) + ctrl_noise;
       else
-        v_traj(:,1:ctrl_based_ctrl_noise_samples,:) = repmat(reshape(u_traj, [control_dim, 1, num_timesteps]), [1, ctrl_based_ctrl_noise_samples, 1]) + ctrl_noise(:,1:ctrl_based_ctrl_noise_samples,:);
+        v_traj(:,1:ctrl_based_ctrl_noise_samples,:) = repmat(reshape(sample_u_traj, [control_dim, 1, num_timesteps]), [1, ctrl_based_ctrl_noise_samples, 1]) + ctrl_noise(:,1:ctrl_based_ctrl_noise_samples,:);
         v_traj(:,ctrl_based_ctrl_noise_samples+1:end,:) = ctrl_noise(:,ctrl_based_ctrl_noise_samples+1:end,:);
       end
 
@@ -84,7 +88,7 @@ function [x_hist, u_hist, time_hist] = mppi(func_is_task_complete, ...
         % Forward propagation
         x_traj(:,:,timestep_num+1) = func_F(x_traj(:,:,timestep_num),func_g(v_traj(:,:,timestep_num)),dt);
 
-        traj_cost = traj_cost + func_run_cost(x_traj(:,:,timestep_num+1)) + learning_rate * (u_traj(:,timestep_num)' * (inv(ctrl_noise_covar) * v_traj(:,:,timestep_num)));
+        traj_cost = traj_cost + func_run_cost(x_traj(:,:,timestep_num+1)) + learning_rate * (sample_u_traj(:,timestep_num)' * (inv(ctrl_noise_covar) * v_traj(:,:,timestep_num)));
 
         if(print)
           fprintf("TN: %d, IN: %d, DU: %d, Simtime: %d\n", timestep_num, iteration, mean(sum(abs(du),1)), time);
@@ -105,25 +109,38 @@ function [x_hist, u_hist, time_hist] = mppi(func_is_task_complete, ...
       w = func_comp_weights(traj_cost);
       du = reshape(sum(repmat(w, [control_dim, 1, num_timesteps]) .* ctrl_noise,2), [control_dim, num_timesteps]);
 
-      u_traj = u_traj + du;
+      sample_u_traj = sample_u_traj + du;
       iteration = iteration + 1;
 
     end
 
-    % Apply control and log data
-    true_x = func_apply_ctrl(x_hist(:,total_timestep_num), u_traj(:,1), dt);
-    x_hist(:,total_timestep_num+1) = true_x;
+    % Transform from sample_u to u
+    u = func_control_transform(sample_x_hist(:,total_timestep_num), sample_u_traj(:,1));
 
-    u_hist = [u_hist u_traj(:,1)];
+    % Apply control and log data
+    true_x = func_apply_ctrl(x_hist(:,total_timestep_num), u, dt);
+
+    % state estimation after applying control
+    xo = func_state_est(true_x);
+
+    % Transform from state used in dynamics vs state used in control sampling
+    sample_xo = func_state_transform(xo);
+
+    % Log state data
+    x_hist(:,total_timestep_num+1) = xo;
+    sample_x_hist(:,total_timestep_num+1) = sample_xo;
+
+    % Log control data
+    u_hist = [u_hist u];
+    sample_u_hist = [sample_u_hist sample_u_traj(:,1)];
+
+    % Move time forward
     time = time + dt;
     time_hist = [time_hist, time];
 
     % Warmstart next control trajectory using past generated control trajectory
-    u_traj(:,1:end-1) = u_traj(:,2:end);
-    u_traj(end) = func_gen_next_ctrl(u_traj(end));
-
-    % state estimation after applying control
-    xo = func_state_est(true_x);
+    sample_u_traj(:,1:end-1) = sample_u_traj(:,2:end);
+    sample_u_traj(end) = func_gen_next_ctrl(sample_u_traj(end));
 
     % Real time plotting
     if(plot_traj)
