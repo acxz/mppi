@@ -115,7 +115,7 @@ function [x_hist, u_hist, sample_x_hist, sample_u_hist, time_hist] = mppi(func_i
     end
 
     % Transform from sample_u to u
-    u = func_control_transform(sample_x_hist(:,total_timestep_num), sample_u_traj(:,1));
+    u = func_control_transform(sample_x_hist(:,total_timestep_num), sample_u_traj(:,1), dt);
 
     % Apply control and log data
     true_x = func_apply_ctrl(x_hist(:,total_timestep_num), u, dt);
