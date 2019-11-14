@@ -5,7 +5,6 @@ disp("MPPI implementation on inv_pen in MATLAB")
 
 disp("starting sampling based MPC")
 
-% TODO: Offload variables into a config file or something
 num_samples = 5e3;
 time_horizon = 1; % in seconds
 num_timesteps = 10;
@@ -22,7 +21,8 @@ save_sampling = false; % Saves 0.8 GB to disk. This will slow the program down.
 sampling_filename = "inv_pen";
 addpath(genpath('../..'));
 
-[x_hist, u_hist, sample_x_hist, sample_u_hist, time_hist] = mppi(@inv_pen_is_task_complete, ...
+[x_hist, u_hist, sample_x_hist, sample_u_hist, rep_traj_cost_hist, ...
+time_hist] = mppi(@inv_pen_is_task_complete, ...
  @inv_pen_control_update_converged, @inv_pen_comp_weights, ...
  @inv_pen_term_cost, @inv_pen_run_cost, @inv_pen_gen_next_ctrl, ...
  @inv_pen_state_est, @inv_pen_apply_ctrl, @inv_pen_g, @inv_pen_F, ...
@@ -31,11 +31,32 @@ addpath(genpath('../..'));
  time_horizon, per_ctrl_based_ctrl_noise, plot_traj, print_verbose, ...
  print_short, save_sampling, sampling_filename);
 
-%plot(time_hist, x_hist(1,:));
-%plot(time_hist, x_hist(2,:));
-%plot(time_hist, [u_hist, 0]);
-%plot(time_hist, sample_x_hist(1,:));
-%plot(time_hist, sample_x_hist(2,:));
-%plot(time_hist, [sample_u_hist, 0]);
+all_figures = findobj('type', 'figure');
+num_figures = length(all_figures);
+
+figure(num_figures + 1);
+hold on;
+title('State');
+xlabel('Time (s)');
+ylabel('Value');
+plot(time_hist, x_hist(1,:));
+plot(time_hist, x_hist(2,:));
+legend('theta', 'theta\_dot');
+
+figure(num_figures + 2);
+hold on;
+title('Control');
+xlabel('Time (s)');
+ylabel('Value');
+plot(time_hist, [u_hist(1,:), 0]);
+legend('Torque');
+
+figure(num_figures + 3);
+hold on;
+title('Trajectory Cost');
+xlabel('Time (s)');
+ylabel('Cost');
+plot(time_hist, [rep_traj_cost_hist, 0]);
+legend('Cost');
 
 disp("Finished")

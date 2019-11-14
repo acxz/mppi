@@ -12,7 +12,8 @@ Octave/Matlab.
 
 ## Usage
 `mppi.m` is just a function that can be used given the required inputs. In the
-`examples/` directory some example code is provided that uses `mppi.m`.
+`examples/` directory some example code is provided that uses `mppi.m`. To run
+an example code just run `example_main.m` from Octave or Matlab.
 
 ## Citation
 To cite `acxz/mppi` in publications use:

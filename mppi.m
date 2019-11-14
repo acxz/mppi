@@ -4,37 +4,35 @@
 %   Autonomous Driving
 % Algorithm 1: Sampling Based MPC
 
-function [x_hist, u_hist, sample_x_hist, sample_u_hist, time_hist] = mppi(func_is_task_complete, ...
-  func_control_update_converged, func_comp_weights, func_term_cost, ...
-  func_run_cost,func_gen_next_ctrl, func_state_est, func_apply_ctrl, func_g, ...
-  func_F, func_state_transform, func_control_transform, func_filter_du, ...
-  num_samples, learning_rate, init_state, init_ctrl_seq, ctrl_noise_covar, ...
-  time_horizon, per_ctrl_based_ctrl_noise, plot_traj, print_verbose, ...
-  print_short, save_sampling, sampling_filename)
-
-  % TODO check inputs for correct dimensionality and value ranges
-  % TODO SGF
-  % TODO provide compute parameterized compute weights function?
+function [x_hist, u_hist, sample_x_hist, sample_u_hist, rep_traj_cost_hist, ...
+  time_hist] = mppi(func_is_task_complete, func_control_update_converged, ...
+  func_comp_weights, func_term_cost, func_run_cost,func_gen_next_ctrl, ...
+  func_state_est, func_apply_ctrl, func_g, func_F, func_state_transform, ...
+  func_control_transform, func_filter_du, num_samples, learning_rate, ...
+  init_state, init_ctrl_seq, ctrl_noise_covar, time_horizon, ...
+  per_ctrl_based_ctrl_noise, plot_traj, print_verbose, print_short, ...
+  save_sampling, sampling_filename)
 
   % time stuff
   num_timesteps = size(init_ctrl_seq, 2);
-  dt = time_horizon/num_timesteps;
+  dt = time_horizon / num_timesteps;
   time = 0;
   time_hist = [time];
 
   % state history
-  state_dim = size(init_state,1);
+  state_dim = size(init_state, 1);
   x_hist = zeros(state_dim, 1);
   x_hist = init_state;
   xo = init_state;
 
   % control history
-  control_dim = size(init_ctrl_seq,1);
+  control_dim = size(init_ctrl_seq, 1);
   sample_u_hist = [];
-  % A big number p much
-  %du = realmax * ones(control_dim, num_timesteps);
-  du = 100 * ones(control_dim, num_timesteps);
+  du = intmax * ones(control_dim, num_timesteps);
   u_hist = [];
+
+  % trajectory cost history
+  rep_traj_cost_hist = [];
 
   % sample state history
   sample_init_state = func_state_transform(init_state);
@@ -54,8 +52,18 @@ function [x_hist, u_hist, sample_x_hist, sample_u_hist, time_hist] = mppi(func_i
 
   % plot trajectory in real time
   if(plot_traj)
-    figure(1)
-    hold on
+    state_plot = figure(1);
+    title('State Value(s)')
+    xlabel('Time');
+    ylabel('Value');
+    control_plot = figure(2);
+    title('Control Value(s)');
+    xlabel('Time');
+    ylabel('Value');
+    traj_cost_plot = figure(3);
+    title('Trajectory Cost');
+    xlabel('Time');
+    ylabel('Value');
   end
 
   total_timestep_num = 1;
@@ -115,12 +123,19 @@ function [x_hist, u_hist, sample_x_hist, sample_u_hist, time_hist] = mppi(func_i
 
       sample_u_traj = sample_u_traj + du;
       iteration = iteration + 1;
-      
+
       if(print_short && (print_verbose == false))
           fprintf("DU: %d, Simtime: %d\n", mean(sum(abs(du),1)), time);
       end
 
     end
+
+    % normalize weights, in case they are not normalized
+    normalized_w = w / sum(w);
+
+    % Compute the representative trajectory cost of what actually happens
+    % another way to think about this is weighted average of sample trajectory costs
+    rep_traj_cost = sum(normalized_w .* traj_cost);
 
     % Transform from sample_u to u
     u = func_control_transform(sample_x_hist(:,total_timestep_num), sample_u_traj(:,1), dt);
@@ -142,6 +157,9 @@ function [x_hist, u_hist, sample_x_hist, sample_u_hist, time_hist] = mppi(func_i
     u_hist = [u_hist u];
     sample_u_hist = [sample_u_hist sample_u_traj(:,1)];
 
+    % Log trajectory cost data
+    rep_traj_cost_hist = [rep_traj_cost_hist rep_traj_cost];
+
     % Move time forward
     time = time + dt;
     time_hist = [time_hist, time];
@@ -154,23 +172,38 @@ function [x_hist, u_hist, sample_x_hist, sample_u_hist, time_hist] = mppi(func_i
     if(plot_traj)
       xlim([0,time_hist(end)])
       state_colors = ['b', 'r', 'm', 'c'];
-      ctrl_colors = ['k', 'g', 'y', 'w'];
+      ctrl_colors = ['g', 'y', 'w'];
+      rep_traj_cost_color = 'k';
+
+      figure(state_plot)
+      hold on
       for sd = (1:state_dim)
         plot(time_hist(total_timestep_num:total_timestep_num+1), ...
              x_hist(sd,total_timestep_num:total_timestep_num+1)', ...
-             state_colors(mod(sd - 1,size(state_colors,2)) + 1)) ...
-
+             state_colors(mod(sd - 1,size(state_colors,2)) + 1), ...
+             'DisplayName', ['State ' num2str(sd)])
       end
+      legend
 
       if (total_timestep_num > 1)
+        figure(control_plot)
+        hold on
         for cd = 1:control_dim
           plot(time_hist(total_timestep_num-1:total_timestep_num), ...
                u_hist(cd,total_timestep_num-1:total_timestep_num)', ...
-               ctrl_colors(mod(cd - 1,size(ctrl_colors,2)) + 1)) ...
-
+               ctrl_colors(mod(cd - 1,size(ctrl_colors,2)) + 1), ...
+               'DisplayName', ['Control ' num2str(cd)])
         end
+        legend
+
+        figure(traj_cost_plot)
+        hold on
+        plot(time_hist(total_timestep_num-1:total_timestep_num), ...
+               rep_traj_cost_hist(total_timestep_num-1:total_timestep_num), ...
+               rep_traj_cost_color, 'DisplayName', 'Trajectory Cost')
+        legend
       end
-      drawnow
+
     end
 
     total_timestep_num = total_timestep_num + 1;
