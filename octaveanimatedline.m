@@ -1,23 +1,23 @@
-## Copyright (C) 2019 Antonius R. Burgers
-##
-## This file is part of Octave.
-##
-## Octave is free software: you can redistribute it and/or modify it
-## under the terms of the GNU General Public License as published by
-## the Free Software Foundation, either version 3 of the License, or
-## (at your option) any later version.
-##
-## Octave is distributed in the hope that it will be useful, but
-## WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-##
-## You should have received a copy of the GNU General Public License
-## along with Octave; see the file COPYING.  If not, see
-## <https://www.gnu.org/licenses/>.
+%% Copyright (C) 2019 Antonius R. Burgers
+%%
+%% This file is part of Octave.
+%%
+%% Octave is free software: you can redistribute it and/or modify it
+%% under the terms of the GNU General Public License as published by
+%% the Free Software Foundation, either version 3 of the License, or
+%% (at your option) any later version.
+%%
+%% Octave is distributed in the hope that it will be useful, but
+%% WITHOUT ANY WARRANTY; without even the implied warranty of
+%% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%% GNU General Public License for more details.
+%%
+%% You should have received a copy of the GNU General Public License
+%% along with Octave; see the file COPYING.  If not, see
+%% <https://www.gnu.org/licenses/>.
 
-classdef animatedline < handle
-  properties (Private)
+classdef octaveanimatedline < handle
+  properties (Hidden)
     h
   end
   properties
@@ -39,7 +39,7 @@ classdef animatedline < handle
     end
   end
 
-  methods (Private)
+  methods (Hidden)
     function truncatepoints(obj)
       [x, y, z] = obj.getpoints;
       if obj.MaximumNumPoints > 0 && numel(x) > obj.MaximumNumPoints
@@ -63,7 +63,7 @@ classdef animatedline < handle
   end
 
   methods
-    function obj = animatedline(varargin)
+    function obj = octaveanimatedline(varargin)
       [lineprop_names, lineprop_dflts] = obj.lineprops;
 
       p = inputParser;

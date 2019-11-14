@@ -59,8 +59,8 @@ function [x_hist, u_hist, sample_x_hist, sample_u_hist, rep_traj_cost_hist, ...
     xlabel('Time');
     ylabel('Value');
     for sd = 1:state_dim
-      state_animated_lines(sd).animatedline = @animatedline(...
-          'Color', state_colors(mod(sd - 1,size(state_colors,2)) + 1,:));
+      state_animated_lines(sd).animatedline = octaveanimatedline(...
+          'Color', state_colors(mod(sd - 1,size(state_colors,1)) + 1,:));
           %'DisplayName', ['State ' num2str(sd)]);
     end
     legend
@@ -79,7 +79,7 @@ function [x_hist, u_hist, sample_x_hist, sample_u_hist, rep_traj_cost_hist, ...
     xlabel('Time');
     ylabel('Value');
     for cd = 1:control_dim
-      control_animated_lines(cd).animatedline = @animatedline(...
+      control_animated_lines(cd).animatedline = octaveanimatedline(...
           'Color', ctrl_colors(mod(cd - 1,size(ctrl_colors,2)) + 1,:));
           %'DisplayName', ['Control ' num2str(cd)]);
     end
@@ -89,7 +89,7 @@ function [x_hist, u_hist, sample_x_hist, sample_u_hist, rep_traj_cost_hist, ...
     title('Trajectory Cost');
     xlabel('Time');
     ylabel('Value');
-    traj_cost_line = animatedline('Color', rep_traj_cost_color);
+    traj_cost_line = octaveanimatedline('Color', rep_traj_cost_color);
         %'DisplayName', 'Trajectory Cost');
     legend
   end
