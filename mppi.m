@@ -21,14 +21,13 @@ function [x_hist, u_hist, sample_x_hist, sample_u_hist, rep_traj_cost_hist, ...
 
   % state history
   state_dim = size(init_state, 1);
-  x_hist = zeros(state_dim, 1);
   x_hist = init_state;
   xo = init_state;
 
   % control history
   control_dim = size(init_ctrl_seq, 1);
   sample_u_hist = [];
-  du = intmax * ones(control_dim, num_timesteps);
+  du = realmax('double') * ones(control_dim, num_timesteps);
   u_hist = [];
 
   % trajectory cost history
@@ -37,7 +36,6 @@ function [x_hist, u_hist, sample_x_hist, sample_u_hist, rep_traj_cost_hist, ...
   % sample state history
   sample_init_state = func_state_transform(init_state);
   sample_state_dim = size(sample_init_state,1);
-  sample_x_hist = zeros(sample_state_dim, 1);
   sample_x_hist = sample_init_state;
   sample_xo = sample_init_state;
 
@@ -52,18 +50,48 @@ function [x_hist, u_hist, sample_x_hist, sample_u_hist, rep_traj_cost_hist, ...
 
   % plot trajectory in real time
   if(plot_traj)
+    state_colors = [[0 0.4470 0.7410]; [0.8500 0.3250 0.0980]; [0.4940 0.1840 0.5560]; [0.4660 0.6740 0.1880]];
+    ctrl_colors = [[0.9290 0.6940 0.1250]; [0.3010 0.7450 0.9330]; [0.6350 0.0780 0.1840]];
+    rep_traj_cost_color = 'k';
+
     state_plot = figure(1);
     title('State Value(s)')
     xlabel('Time');
     ylabel('Value');
+    for sd = 1:state_dim
+      state_animated_lines(sd).animatedline = @animatedline(...
+          'Color', state_colors(mod(sd - 1,size(state_colors,2)) + 1,:));
+          %'DisplayName', ['State ' num2str(sd)]);
+    end
+    legend
+
+    % Go ahead and plot the first state
+    figure(state_plot)
+    hold on
+    for sd = 1:state_dim
+      addpoints(state_animated_lines(sd).animatedline, time_hist(1), x_hist(sd,1));
+    end
+    legend
+    drawnow
+
     control_plot = figure(2);
     title('Control Value(s)');
     xlabel('Time');
     ylabel('Value');
+    for cd = 1:control_dim
+      control_animated_lines(cd).animatedline = @animatedline(...
+          'Color', ctrl_colors(mod(cd - 1,size(ctrl_colors,2)) + 1,:));
+          %'DisplayName', ['Control ' num2str(cd)]);
+    end
+    legend
+
     traj_cost_plot = figure(3);
     title('Trajectory Cost');
     xlabel('Time');
     ylabel('Value');
+    traj_cost_line = animatedline('Color', rep_traj_cost_color);
+        %'DisplayName', 'Trajectory Cost');
+    legend
   end
 
   total_timestep_num = 1;
@@ -170,40 +198,25 @@ function [x_hist, u_hist, sample_x_hist, sample_u_hist, rep_traj_cost_hist, ...
 
     % Real time plotting
     if(plot_traj)
-      xlim([0,time_hist(end)])
-      state_colors = ['b', 'r', 'm', 'c'];
-      ctrl_colors = ['g', 'y', 'w'];
-      rep_traj_cost_color = 'k';
 
       figure(state_plot)
       hold on
-      for sd = (1:state_dim)
-        plot(time_hist(total_timestep_num:total_timestep_num+1), ...
-             x_hist(sd,total_timestep_num:total_timestep_num+1)', ...
-             state_colors(mod(sd - 1,size(state_colors,2)) + 1), ...
-             'DisplayName', ['State ' num2str(sd)])
+      for sd = 1:state_dim
+        addpoints(state_animated_lines(sd).animatedline, time_hist(total_timestep_num+1), x_hist(sd, total_timestep_num+1));
       end
       legend
 
-      if (total_timestep_num > 1)
-        figure(control_plot)
-        hold on
-        for cd = 1:control_dim
-          plot(time_hist(total_timestep_num-1:total_timestep_num), ...
-               u_hist(cd,total_timestep_num-1:total_timestep_num)', ...
-               ctrl_colors(mod(cd - 1,size(ctrl_colors,2)) + 1), ...
-               'DisplayName', ['Control ' num2str(cd)])
-        end
-        legend
-
-        figure(traj_cost_plot)
-        hold on
-        plot(time_hist(total_timestep_num-1:total_timestep_num), ...
-               rep_traj_cost_hist(total_timestep_num-1:total_timestep_num), ...
-               rep_traj_cost_color, 'DisplayName', 'Trajectory Cost')
-        legend
+      figure(control_plot)
+      hold on
+      for cd = 1:control_dim
+        addpoints(control_animated_lines(cd).animatedline, time_hist(total_timestep_num), u_hist(cd, total_timestep_num))'
       end
+      legend
 
+      figure(traj_cost_plot)
+      addpoints(traj_cost_line, time_hist(total_timestep_num), rep_traj_cost_hist(total_timestep_num));
+      legend
+    drawnow
     end
 
     total_timestep_num = total_timestep_num + 1;
