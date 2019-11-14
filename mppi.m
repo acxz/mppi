@@ -209,7 +209,7 @@ function [x_hist, u_hist, sample_x_hist, sample_u_hist, rep_traj_cost_hist, ...
       figure(control_plot)
       hold on
       for cd = 1:control_dim
-        addpoints(control_animated_lines(cd).animatedline, time_hist(total_timestep_num), u_hist(cd, total_timestep_num))'
+        addpoints(control_animated_lines(cd).animatedline, time_hist(total_timestep_num), u_hist(cd, total_timestep_num));
       end
       legend
 
