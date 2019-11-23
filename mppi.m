@@ -1,8 +1,4 @@
 % Author: Akash Patel (apatel435)
-% Reference: https://arxiv.org/pdf/1707.02342.pdf
-% Information Theoretic Model Predictive Control:Theory and Applications to
-%   Autonomous Driving
-% Algorithm 1: Sampling Based MPC
 
 function [x_hist, u_hist, sample_x_hist, sample_u_hist, rep_traj_cost_hist, ...
   time_hist] = mppi(func_is_task_complete, func_control_update_converged, ...

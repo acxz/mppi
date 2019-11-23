@@ -15,6 +15,12 @@ Octave/Matlab.
 `examples/` directory some example code is provided that uses `mppi.m`. To run
 an example code just run `example_main.m` from Octave or Matlab.
 
+## References
+
+```
+G. Williams, P. Drews, B. Goldfain, J. M. Rehg and E. A. Theodorou, "Information-Theoretic Model Predictive Control: Theory and Applications to Autonomous Driving," in IEEE Transactions on Robotics, vol. 34, no. 6, pp. 1603-1622, Dec. 2018.
+```
+
 ## Citation
 To cite `acxz/mppi` in publications use:
 
