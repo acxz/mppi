@@ -121,7 +121,7 @@ function [x_hist, u_hist, sample_x_hist, sample_u_hist, rep_traj_cost_hist, ...
         % Forward propagation
         x_traj(:,:,timestep_num+1) = func_F(x_traj(:,:,timestep_num),func_g(v_traj(:,:,timestep_num)),dt);
 
-        traj_cost = traj_cost + func_run_cost(x_traj(:,:,timestep_num+1)) + learning_rate * (sample_u_traj(:,timestep_num)' * (inv(ctrl_noise_covar) * v_traj(:,:,timestep_num)));
+        traj_cost = traj_cost + func_run_cost(x_traj(:,:,timestep_num+1)) + learning_rate * sample_u_traj(:,timestep_num)' * inv(ctrl_noise_covar) * (sample_u_traj(:,timestep_num) - v_traj(:,:,timestep_num));
 
         if(print_verbose)
           fprintf("TN: %d, IN: %d, DU: %d, Simtime: %d\n", timestep_num, iteration, mean(sum(abs(du),1)), time);
