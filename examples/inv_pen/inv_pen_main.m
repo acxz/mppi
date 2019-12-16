@@ -31,32 +31,32 @@ time_hist] = mppisim(@inv_pen_is_task_complete, ...
  time_horizon, per_ctrl_based_ctrl_noise, plot_traj, print_sim, ...
  print_mppi, save_sampling, sampling_filename);
 
-##all_figures = findobj('type', 'figure');
-##num_figures = length(all_figures);
-##
-##figure(num_figures + 1);
-##hold on;
-##title('State');
-##xlabel('Time (s)');
-##ylabel('Value');
-##plot(time_hist, x_hist(1,:));
-##plot(time_hist, x_hist(2,:));
-##legend('theta', 'theta\_dot');
-##
-##figure(num_figures + 2);
-##hold on;
-##title('Control');
-##xlabel('Time (s)');
-##ylabel('Value');
-##plot(time_hist, [u_hist(1,:), 0]);
-##legend('Torque');
-##
-##figure(num_figures + 3);
-##hold on;
-##title('Trajectory Cost');
-##xlabel('Time (s)');
-##ylabel('Cost');
-##plot(time_hist, [rep_traj_cost_hist, 0]);
-##legend('Cost');
-##
-##disp("Finished")
+all_figures = findobj('type', 'figure');
+num_figures = length(all_figures);
+
+figure(num_figures + 1);
+hold on;
+title('State');
+xlabel('Time (s)');
+ylabel('Value');
+plot(time_hist, x_hist(1,:));
+plot(time_hist, x_hist(2,:));
+legend('theta', 'theta\_dot');
+
+figure(num_figures + 2);
+hold on;
+title('Control');
+xlabel('Time (s)');
+ylabel('Value');
+plot(time_hist, [u_hist(1,:), 0]);
+legend('Torque');
+
+figure(num_figures + 3);
+hold on;
+title('Trajectory Cost');
+xlabel('Time (s)');
+ylabel('Cost');
+plot(time_hist, [rep_traj_cost_hist, 0]);
+legend('Cost');
+
+disp("Finished")

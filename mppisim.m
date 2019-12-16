@@ -15,12 +15,12 @@ function [x_hist, u_hist, sample_x_hist, sample_u_hist, rep_traj_cost_hist, ...
   time = 0;
   time_hist = [time];
 
-  % state history
+  % state stuff
   state_dim = size(init_state, 1);
   x_hist = init_state;
   curr_x = init_state;
 
-  % sample state history
+  % sample state stuff
   sample_init_state = func_state_transform(init_state);
   sample_x_hist = sample_init_state;
 
@@ -88,7 +88,7 @@ function [x_hist, u_hist, sample_x_hist, sample_u_hist, rep_traj_cost_hist, ...
     [sample_u_traj, rep_traj_cost] = mppi(func_control_update_converged, ...
     func_comp_weights, func_term_cost, func_run_cost, func_g, func_F, ...
     func_state_transform, func_filter_du, num_samples, learning_rate, ...
-    init_state, sample_u_traj, ctrl_noise_covar, time_horizon, ...
+    curr_x, sample_u_traj, ctrl_noise_covar, time_horizon, ...
     per_ctrl_based_ctrl_noise, print_mppi, save_sampling, sampling_filename);
 
     % Transform from sample_u to u
